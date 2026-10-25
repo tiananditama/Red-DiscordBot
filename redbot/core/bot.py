@@ -52,6 +52,7 @@ from . import (
 )
 from ._cli import ExitCodes
 from ._cog_manager import CogManager, CogManagerUI
+from ._silent import apply_silent_defaults, set_silent_default
 from .core_commands import Core
 from .data_manager import cog_data_path
 from .dev_commands import Dev
@@ -165,6 +166,7 @@ class Red(
             datarequests__allow_user_requests=True,
             datarequests__user_requests_are_strict=True,
             use_buttons=False,
+            silent_messages=True,
             enabled_slash_commands={},
             enabled_user_commands={},
             enabled_message_commands={},
@@ -1212,6 +1214,9 @@ class Red(
         """
         This should only be run once, prior to connecting to Discord gateway.
         """
+        apply_silent_defaults()
+        set_silent_default(await self._config.silent_messages())
+
         await self.add_cog(Core(self))
         await self.add_cog(CogManagerUI())
         if self._cli_flags.dev:

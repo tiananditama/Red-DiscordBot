@@ -53,6 +53,7 @@ from . import (
     _downloader,
 )
 from ._diagnoser import IssueDiagnoser
+from ._silent import set_silent_default
 from .utils import AsyncIter, can_user_send_messages_in
 from .utils._internal_utils import fetch_latest_red_version
 from .utils.predicates import MessagePredicate
@@ -4260,6 +4261,31 @@ class Core(commands.commands._RuleDropper, commands.Cog, CoreLogic):
             await ctx.send(_("I will use buttons on basic menus."))
         else:
             await ctx.send(_("I will not use buttons on basic menus."))
+
+    @_set.command(name="silentmessages")
+    @commands.is_owner()
+    async def _set_silentmessages(self, ctx: commands.Context, enabled: bool = None):
+        """
+        Set whether messages sent by the bot should be silent by default.
+
+        Silent messages do not trigger push or desktop notifications on Discord.
+        This defaults to enabled. Using this without a value will toggle.
+
+        **Examples:**
+            - `[p]set silentmessages True` - Sends messages silently.
+            - `[p]set silentmessages` - Toggles the value.
+
+        **Arguments:**
+            - `[enabled]` - Whether messages should be silent. Leave blank to toggle.
+        """
+        if enabled is None:
+            enabled = not await ctx.bot._config.silent_messages()
+        await ctx.bot._config.silent_messages.set(enabled)
+        set_silent_default(enabled)
+        if enabled:
+            await ctx.send(_("Messages will be sent silently by default."))
+        else:
+            await ctx.send(_("Messages will no longer be sent silently by default."))
 
     @_set.command(name="errormsg")
     @commands.is_owner()
