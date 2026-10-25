@@ -32,7 +32,7 @@ _ = Translator("Audio", Path(__file__))
 
 
 class PlayerCommands(MixinMeta, metaclass=CompositeMetaClass):
-    @commands.command(name="play")
+    @commands.command(name="play", aliases=["p"])
     @commands.guild_only()
     @commands.bot_has_permissions(embed_links=True)
     async def command_play(self, ctx: commands.Context, *, query: str):

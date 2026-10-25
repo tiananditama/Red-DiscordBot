@@ -1302,8 +1302,6 @@ to be restored when the queue closes.
 audioset restart
 """"""""""""""""
 
-.. note:: |owner-lock|
-
 **Syntax**
 
 .. code-block:: none
