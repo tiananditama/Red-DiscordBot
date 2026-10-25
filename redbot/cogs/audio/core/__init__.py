@@ -133,6 +133,7 @@ class Audio(
             notify=False,
             prefer_lyrics=False,
             repeat=False,
+            repeat_track=False,
             shuffle=False,
             shuffle_bumped=True,
             thumbnail=False,

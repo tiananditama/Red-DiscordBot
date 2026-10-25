@@ -3062,11 +3062,16 @@ repeat
 
 .. code-block:: none
 
-    [p]repeat 
+    [p]repeat
+    [p]repeat queue
+    [p]repeat track
 
 **Description**
 
-Toggle repeat.
+Toggle repeat for the queue or the current track.
+
+Queue repeat loops the whole queue. Track repeat repeats the current track
+until it is disabled or skipped.
 
 .. _audio-command-search:
 

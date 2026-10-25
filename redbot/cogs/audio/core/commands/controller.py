@@ -755,11 +755,7 @@ class PlayerControllerCommands(MixinMeta, metaclass=CompositeMetaClass):
             embed.set_footer(text=_("Nothing playing."))
         await self.send_embed_msg(ctx, embed=embed)
 
-    @commands.command(name="repeat")
-    @commands.guild_only()
-    @commands.bot_has_permissions(embed_links=True)
-    async def command_repeat(self, ctx: commands.Context):
-        """Toggle repeat."""
+    async def _toggle_repeat(self, ctx: commands.Context, mode: str) -> None:
         dj_enabled = self._dj_status_cache.setdefault(
             ctx.guild.id, await self.config.guild(ctx.guild).dj_enabled()
         )
@@ -784,20 +780,59 @@ class PlayerControllerCommands(MixinMeta, metaclass=CompositeMetaClass):
             player.store("notify_channel", ctx.channel.id)
 
         autoplay = await self.config.guild(ctx.guild).auto_play()
-        repeat = await self.config.guild(ctx.guild).repeat()
         msg = ""
-        msg += _("Repeat tracks: {true_or_false}.").format(
-            true_or_false=_("Enabled") if not repeat else _("Disabled")
-        )
-        await self.config.guild(ctx.guild).repeat.set(not repeat)
-        if repeat is not True and autoplay is True:
-            msg += _("\nAuto-play has been disabled.")
-            await self.config.guild(ctx.guild).auto_play.set(False)
+        if mode == "track":
+            repeat_track = await self.config.guild(ctx.guild).repeat_track()
+            await self.config.guild(ctx.guild).repeat_track.set(not repeat_track)
+            if not repeat_track:
+                if await self.config.guild(ctx.guild).repeat():
+                    await self.config.guild(ctx.guild).repeat.set(False)
+                    msg += _("\nQueue repeat has been disabled.")
+                if autoplay is True:
+                    msg += _("\nAuto-play has been disabled.")
+                    await self.config.guild(ctx.guild).auto_play.set(False)
+            msg += _("Repeat track: {true_or_false}.").format(
+                true_or_false=_("Enabled") if not repeat_track else _("Disabled")
+            )
+        else:
+            repeat = await self.config.guild(ctx.guild).repeat()
+            await self.config.guild(ctx.guild).repeat.set(not repeat)
+            if not repeat:
+                if await self.config.guild(ctx.guild).repeat_track():
+                    await self.config.guild(ctx.guild).repeat_track.set(False)
+                    msg += _("\nTrack repeat has been disabled.")
+                if autoplay is True:
+                    msg += _("\nAuto-play has been disabled.")
+                    await self.config.guild(ctx.guild).auto_play.set(False)
+            msg += _("Repeat queue: {true_or_false}.").format(
+                true_or_false=_("Enabled") if not repeat else _("Disabled")
+            )
 
         embed = discord.Embed(title=_("Setting Changed"), description=msg)
         await self.send_embed_msg(ctx, embed=embed)
         if self._player_check(ctx):
             await self.set_player_settings(ctx)
+
+    @commands.group(name="repeat", invoke_without_command=True)
+    @commands.guild_only()
+    @commands.bot_has_permissions(embed_links=True)
+    async def command_repeat(self, ctx: commands.Context):
+        """Toggle queue repeat.
+
+        Use `[p]repeat queue` for queue repeat or `[p]repeat track` to repeat the current track.
+        """
+        if ctx.invoked_subcommand is None:
+            await self._toggle_repeat(ctx, "queue")
+
+    @command_repeat.command(name="queue")
+    async def command_repeat_queue(self, ctx: commands.Context):
+        """Toggle queue repeat."""
+        await self._toggle_repeat(ctx, "queue")
+
+    @command_repeat.command(name="track")
+    async def command_repeat_track(self, ctx: commands.Context):
+        """Toggle current track repeat."""
+        await self._toggle_repeat(ctx, "track")
 
     @commands.command(name="remove")
     @commands.guild_only()
